@@ -1,0 +1,246 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+  <a href="http://pgea.in/kseb/bill_calculator">calculation formulas</a>
+   
+        <div class="container" style="padding-top: 80px">
+            <div class="row" >
+                <div class="col-md-6 co-12">
+                    <div class="card">
+                      <div class="card-header"><a href="https://www.kseb.in/bill_calculator_v12/">Electricity Bill Calculator</a></div>
+                      <div class="card-body">
+                        <form name="formTariff" id="formTariff">
+                            <div class="form-group row">
+                                <label class="control-label col-sm-3">Tariff</label>
+                                <div class="col-sm-9">
+                                    <select class="form-control" name="tariff_id" id="tariff">
+                                        <option value="1" data-load-flag="0" >LT-1A</option><option value="5" data-load-flag="1" >LT-4A</option><option value="18" data-load-flag="1" >LT-4B</option><option value="6" data-load-flag="1" >LT-5A</option><option value="19" data-load-flag="1" >LT-5B</option><option value="7" data-load-flag="1" >LT-6A</option><option value="8" data-load-flag="1" >LT-6B</option><option value="9" data-load-flag="1" >LT-6C</option><option value="10" data-load-flag="1" >LT-6D</option><option value="2" data-load-flag="1" >LT-6E</option><option value="14" data-load-flag="1" >LT-6F</option><option value="22" data-load-flag="1" >LT-6G</option><option value="11" data-load-flag="1" >LT-7A</option><option value="12" data-load-flag="1" >LT-7B</option><option value="13" data-load-flag="1" >LT-7C</option>                                        </select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="control-label col-sm-3">Purpose</label>
+                                <div class="col-sm-9">
+                                    <select name="purpose_id" id="purpose" class="form-control">
+                                        <option value=""></option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="control-label col-sm-3">Billing Cycle</label>
+                                <div class="col-sm-9">
+                                  <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="frequency" value="2" checked id="frequency2">
+                                    <label class="form-check-label" for="phase1">  2 months</label>
+                                  </div>
+                                  <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="frequency" value="1" id="frequency1">
+                                    <label class="form-check-label" for="phase3">  1 month</label>
+                                  </div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="control-label col-sm-3">Consumed Units</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="WNL" id="unit" size="11.5" maxlength="5" required  value=""  autocomplete="off" class="form-control" >
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="control-label col-sm-3">Phase</label>
+                                <div class="col-sm-9">
+                                  <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="phase" value="1" checked id="phase1">
+                                    <label class="form-check-label" for="phase1">  Single phase</label>
+                                  </div>
+                                  <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="phase" value="3" id="phase3">
+                                    <label class="form-check-label" for="phase3">  Three phase</label>
+                                  </div>
+                                </div>
+                            </div>
+                            <div class="form-group row" id="load-form-group" style="display: none">
+                                <label class="control-label col-sm-3">Connected Load (watts)</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="load" id="load" size="11.5" maxlength="6" value=""  autocomplete="off" class="form-control"  required >
+                                </div>
+                            </div>
+
+
+                            <button id="submitTariff" class="btn btn-success btn-block">Submit</button>
+                        </form>
+                      </div>
+                    </div>
+
+                </div>
+                <div class="col-md-6 co-12">
+                    <div class="card" style="display:none" id="bill">
+                      <div class="card-header">Bill Details(Amount(₹))</div>
+                      <div class="card-body">
+                          <table class="table" id="bill-details">
+                          </table>
+                      </div>
+                    </div>
+                </div>
+
+                
+            </div>
+        </div>
+
+      <script>
+          
+
+			(function($) {
+			  $.fn.inputFilter = function(inputFilter) {
+			    return this.on("input keydown keyup mousedown mouseup select contextmenu drop", function() {
+			      if (inputFilter(this.value)) {
+			        this.oldValue = this.value;
+			        this.oldSelectionStart = this.selectionStart;
+			        this.oldSelectionEnd = this.selectionEnd;
+			      } else if (this.hasOwnProperty("oldValue")) {
+			        this.value = this.oldValue;
+			        this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+			      } else {
+			        this.value = "";
+			      }
+			    });
+			  };
+			}(jQuery));
+        $(document).ready( function () {
+          
+            filterConnLoad();
+            filterTariffPurpose();
+
+						$("input[name=WNL]").inputFilter(function(value) {
+						  return /^[1-9]?\d{0,5}$/.test(value);
+						});
+						$("input[name=load]").inputFilter(function(value) {
+							return /^[1-9]?\d{0,5}$/.test(value);
+						});
+            $('input').keyup(function(){
+                $('#bill').hide();
+                $('.alert-info').show();
+                $('.alert-danger').hide();
+            });
+						$('select,input[type=radio]').change(function(){
+								$('#bill').hide();
+								$('.alert-info').show();
+								$('.alert-danger').hide();
+						});
+
+           $('#submitTariff').click(function(event){
+                event.preventDefault();
+                // $.getJSON( "response.json", function( data ) {
+                
+                $.post("https://www.kseb.in/bill_calculator_v12/postTariff.php",$( "#formTariff" ).serialize() , function(data){
+                    result = JSON.parse(data);
+                    console.log(result)
+                    $('#jsonresult').text(JSON.stringify(result));
+                    if(result['err_flag']>0){
+                        $('.alert-danger').html('<strong>Error!</strong>&nbsp;&nbsp; Network not available. Please Try after some time.');
+                        $('#bill').hide();
+                        $('.alert-info').hide();
+                        $('.alert-danger').show();
+                    }
+                    if(result['result_data']['err_flag']==0){
+                        $('#bill').show();
+                        $('.alert-danger').hide();
+                        $('.alert-info').hide();
+                        $('#bill-details').html('');
+                        
+                        $.each(result['result_data']['tariff_values'],function(key,item){
+
+                            lastLine ='<tr><th class="desc blue-tail"> </th><th style="text-align:right!important" class="total blue-tail"></th></tr>';
+                            row = '<tr><td class="desc"><td style="text-align:right!important" class="amount"></td></tr>';
+                            if(item['head']=='bill_total'){
+                                line = $(lastLine).clone();
+                                small='<br><b>*</b> <small style="font-size:70%"> Fraction of rupees rounded off in total amount, is adjusted in Energy Charge/Fixed Charge.</small>';
+                                line.find('.desc').html(item['descr']+small);
+                                line.find('.total').text(item['value'].toFixed(2));
+                            }else{
+                                line = $(row).clone();
+                                line.find('.desc').text(item['descr']);
+                                line.find('.amount').text(item['value'].toFixed(2));
+															if(item['value']<0){
+																line.find('.amount').css('color','#2c9e10');
+																line.find('.desc').css('color','#2c9e10');
+															}
+															if(item['head']=='EC'||item['head']=='FC'){
+																line.find('.desc').text(item['descr']+'*');
+															}
+                            }
+                            $('#bill-details').append(line);
+
+                        });
+                    }else if(result['result_data']['err_flag']>0){
+                        $('.alert-danger').html('<strong>Error!</strong>&nbsp;&nbsp;'+result['result_data']['err_msg']);
+                        $('#bill').hide();
+                        $('.alert-info').hide();
+                        $('.alert-danger').show();
+
+                    }
+                });
+            });
+            $("#tariff").change(function(){
+                var tariff_id = $('#tariff').val();
+                if(tariff_id==5)
+                {
+                    $('#bimonthly').hide();
+										$('input[name=frequency]:radio[value=1]').prop("checked", true);
+                }
+                else{
+                    $('#bimonthly').show();
+										$('input[name=frequency]:radio[value=2]').prop("checked", true);
+                }
+                filterConnLoad();
+                $("#purpose").val('');
+                filterTariffPurpose();
+            });
+            function filterConnLoad(){
+                var tariff_id = $('#tariff').val();
+                $('#load-form-group').hide();
+                tariffs = {"1":{"id":1,"name":"LT-1A","load_flag":0},"5":{"id":5,"name":"LT-4A","load_flag":1},"18":{"id":18,"name":"LT-4B","load_flag":1},"6":{"id":6,"name":"LT-5A","load_flag":1},"19":{"id":19,"name":"LT-5B","load_flag":1},"7":{"id":7,"name":"LT-6A","load_flag":1},"8":{"id":8,"name":"LT-6B","load_flag":1},"9":{"id":9,"name":"LT-6C","load_flag":1},"10":{"id":10,"name":"LT-6D","load_flag":1},"2":{"id":2,"name":"LT-6E","load_flag":1},"14":{"id":14,"name":"LT-6F","load_flag":1},"22":{"id":22,"name":"LT-6G","load_flag":1},"11":{"id":11,"name":"LT-7A","load_flag":1},"12":{"id":12,"name":"LT-7B","load_flag":1},"13":{"id":13,"name":"LT-7C","load_flag":1}};
+                $.each(tariffs,function(k,v){
+                    if((v.load_flag==1)&&(v.id==tariff_id)){
+                        $('#load-form-group').show();
+                    }
+                });
+            }
+            function filterTariffPurpose(){
+                var tariff_id = $('#tariff').val();
+                purposes = {"10":{"id":15,"name":"Domestic","tariff_id":1},"50":{"id":53,"name":"Manufacturing Units","tariff_id":5},"51":{"id":239,"name":"KWA Pump House","tariff_id":5},"52":{"id":-5,"name":"Others","tariff_id":5},"181":{"id":73,"name":"IT Enabled Services","tariff_id":18},"182":{"id":-18,"name":"Others","tariff_id":18},"60":{"id":345,"name":"Pumping \/ Dewatering","tariff_id":6},"61":{"id":-6,"name":"Others","tariff_id":6},"190":{"id":80,"name":"Livestock farm","tariff_id":19},"191":{"id":-19,"name":"Others","tariff_id":19},"70":{"id":89,"name":"Educational Institutions","tariff_id":7},"71":{"id":93,"name":"Libraries and Reading Rooms","tariff_id":7},"72":{"id":-7,"name":"Others","tariff_id":7},"80":{"id":146,"name":"KWA Offices","tariff_id":8},"81":{"id":-8,"name":"Others","tariff_id":8},"90":{"id":154,"name":"Railways","tariff_id":9},"91":{"id":-9,"name":"Others","tariff_id":9},"100":{"id":161,"name":"Orphanages","tariff_id":10},"101":{"id":16,"name":"Libraries & Reading Rooms","tariff_id":10},"102":{"id":-10,"name":"Others","tariff_id":10},"20":{"id":246,"name":"Gymnasium","tariff_id":2},"21":{"id":19,"name":"Sports and Arts Club","tariff_id":2},"22":{"id":18,"name":"Swimming Club","tariff_id":2},"23":{"id":200,"name":"Offices of Political Parties","tariff_id":2},"25":{"id":-2,"name":"Others","tariff_id":2},"140":{"id":173,"name":"Construction","tariff_id":14},"141":{"id":-14,"name":"Others","tariff_id":14},"220":{"id":128,"name":"Private Hospitals","tariff_id":22},"221":{"id":-22,"name":"Others","tariff_id":22},"110":{"id":172,"name":"Commercial","tariff_id":11},"111":{"id":-11,"name":"Others","tariff_id":11},"120":{"id":188,"name":"Shops","tariff_id":12},"121":{"id":-12,"name":"Others","tariff_id":12},"130":{"id":190,"name":"Cinema Theatres","tariff_id":13},"131":{"id":191,"name":"Circus","tariff_id":13},"132":{"id":18,"name":"Swimming Clubs","tariff_id":13},"133":{"id":246,"name":"Gymnasium","tariff_id":13},"134":{"id":19,"name":"Sports and Arts Club","tariff_id":13}};
+                purposesForTariff = [];
+                $.each(purposes,function(k,v){
+                    if(v.tariff_id==$("#tariff").val()){
+                        purposesForTariff.push(v);
+                    }
+                });
+                $("#purpose").html('');
+                $.each(purposesForTariff,function(k,v){
+                  if(k==0)
+                  {
+                    row = '<option value="" selected></option>';
+                  } else {
+                    row = '<option value=""></option>';
+
+                  }
+                    line = $(row).clone();
+                    line.val(v.id);
+                    line.html(v.name);
+                    $("#purpose").append(line);
+                });
+            }
+        });
+        </script>
+
+
+  </div>
+
+  </body>
+  </html>
